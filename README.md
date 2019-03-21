@@ -6,7 +6,9 @@ Note: this demonstrates issues creating session on keycloak cluster
 
     docker-compose -f docker-compose.yml -f docker-compose.ports.yml up
 
-## Create session on cluster (fails)
+## Create Sessions
+
+### Cluster (this fails and demonstrates the issue)
 
     open http://localhost:8000/auth/realms/example/account
     
@@ -17,7 +19,7 @@ Note: this demonstrates issues creating session on keycloak cluster
     # 1st try (or cleared cookies) => "An error occurred, please login again through your application."
     # 2nd try (with existing cookies) => "You are already logged in."
 
-## Create session on single node
+### Single Node
 
     open http://localhost:8081/auth/realms/example/account
 
@@ -26,7 +28,15 @@ Note: this demonstrates issues creating session on keycloak cluster
 
     # => works, the "Edit Account" view is shown
 
-## Analysis
+## Analyse Internals
+
+### Container Logs
+
+    [...]
+    keycloak1_1       | 15:12:34,152 INFO  [org.infinispan.CLUSTER] (remote-thread--p8-t5) [Context=work] ISPN100010: Finished rebalance with members [keycloak1, keycloak2], topology id 5
+keycloak1_1       | 15:12:34,152 INFO  [org.infinispan.CLUSTER] (remote-thread--p8-t1) [Context=clientSessions] ISPN100010: Finished rebalance with members [keycloak1, keycloak2], topology id 5
+keycloak1_1       | 15:12:34,164 INFO  [org.infinispan.CLUSTER] (remote-thread--p8-t7) [Context=authenticationSessions] ISPN100010: Finished rebalance with members [keycloak1, keycloak2], topology id 5
+    [...]
 
 ### JDBC_PING MySQL Status
 
