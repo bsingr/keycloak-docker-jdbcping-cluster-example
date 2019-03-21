@@ -26,6 +26,26 @@ Note: this demonstrates issues creating session on keycloak cluster
 
     # => works, the "Edit Account" view is shown
 
+## Analysis
+
+### JDBC_PING MySQL Status
+
+    $ mysql --host 127.0.0.1 --user root --password=root --database keycloak --execute "select * from JGROUPSPING;"
+    
+    mysql: [Warning] Using a password on the command line interface can be insecure.
+    +--------------------------------------+-----------+---------------------+--------------+------------------------------------------+
+    | own_addr                             | bind_addr | created             | cluster_name | ping_data                                |
+    +--------------------------------------+-----------+---------------------+--------------+------------------------------------------+
+    | 6d69d5f7-4c84-18cb-6d64-dd2ddb2b3c99 | keycloak1 | 2019-03-21 15:12:31 | ejb          | md�-�+<�mi��L�� 	keycloak1� ���            |
+    | f976f2e6-c4f5-ada4-796f-99f1c3b97193 | keycloak1 | 2019-03-21 15:12:31 | ejb          | yo��ùq��v���� 	keycloak2� ���                |
+    +--------------------------------------+-----------+---------------------+--------------+------------------------------------------+
+
+### Health Check Module
+
+    $ curl http://localhost:8081/auth/realms/master/health/check
+    {"details":{"database":{"connection":"established","state":"UP"},"filesystem":{"freebytes":13042200576,"state":"UP"},"infinispan":{"numberOfNodes":2,"state":"UP","healthStatus":"HEALTHY","nodeNames":["keycloak1","keycloak2"],"cacheDetails":[{"cacheName":"realms","healthStatus":"HEALTHY"},{"cacheName":"authenticationSessions","healthStatus":"HEALTHY"},{"cacheName":"sessions","healthStatus":"HEALTHY"},{"cacheName":"authorizationRevisions","healthStatus":"HEALTHY"},{"cacheName":"work","healthStatus":"HEALTHY"},{"cacheName":"keys","healthStatus":"HEALTHY"},{"cacheName":"clientSessions","healthStatus":"HEALTHY"},{"cacheName":"users","healthStatus":"HEALTHY"},{"cacheName":"loginFailures","healthStatus":"HEALTHY"},{"cacheName":"offlineClientSessions","healthStatus":"HEALTHY"},{"cacheName":"authorization","healthStatus":"HEALTHY"},{"cacheName":"realmRevisions","healthStatus":"HEALTHY"},{"cacheName":"offlineSessions","healthStatus":"HEALTHY"},{"cacheName":"actionTokens","healthStatus":"HEALTHY"},{"cacheName":"userRevisions","healthStatus":"HEALTHY"}],"clusterName":"ejb"}},"name":"keycloak","state":"UP"}
+
+
 ## Resources
 
 - https://www.keycloak.org/docs/latest/server_installation/index.html#_clustering
