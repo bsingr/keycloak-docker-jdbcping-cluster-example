@@ -1,0 +1,10 @@
+# https://github.com/thomasdarimont/keycloak-health-checks
+
+embed-server --server-config=standalone-ha.xml --std-out=echo
+batch
+
+module add --name=com.github.thomasdarimont.keycloak.extensions.keycloak-health-checks --resources=/opt/jboss/modules/keycloak-health-checks-4.8.3.0-SNAPSHOT.jar --dependencies=org.keycloak.keycloak-core,org.keycloak.keycloak-services,org.keycloak.keycloak-server-spi,org.keycloak.keycloak-server-spi-private,javax.api,javax.ws.rs.api,com.fasterxml.jackson.core.jackson-core,com.fasterxml.jackson.core.jackson-databind,com.fasterxml.jackson.core.jackson-annotations,org.jboss.logging,org.infinispan,org.infinispan.commons
+/subsystem=keycloak-server:list-add(name=providers,value=module:com.github.thomasdarimont.keycloak.extensions.keycloak-health-checks)
+
+run-batch
+stop-embedded-server

@@ -1,0 +1,33 @@
+embed-server --server-config=standalone-ha.xml --std-out=echo
+batch
+
+/subsystem=jgroups/channel=ee:write-attribute(name=stack, value=tcp)
+
+# won't be used
+/subsystem=jgroups/stack=udp:remove()
+
+# tcp stack needs the external_addr of the host for proper communication
+/subsystem=jgroups/stack=tcp/transport=TCP/property=external_addr:add(value="${env.JGROUPS_NODE_HOSTNAME}")
+
+# won't be used
+/subsystem=jgroups/stack=tcp/protocol=MPING:remove()
+
+# configure our jdbc_ping stack
+/subsystem=jgroups/stack=tcp/protocol=JDBC_PING:add(add-index=0)
+/subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=connection_driver:add(value="com.mysql.jdbc.Driver")
+/subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=connection_url:add(value="jdbc:mysql://${env.MYSQL_HOST:localhost}:${env.MYSQL_PORT:3306}/${env.MYSQL_DATABASE:keycloak}?useSSL=false&amp;characterEncoding=UTF-8")
+/subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=connection_username:add(value="${env.MYSQL_USER:keycloak}")
+/subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=connection_password:add(value="${env.MYSQL_PASSWORD:keycloak}")
+/subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=initialize_sql:add(value="CREATE TABLE IF NOT EXISTS ${env.MYSQL_DATABASE:keycloak}.JGROUPSPING (own_addr varchar(200) NOT NULL, bind_addr varchar(200), created timestamp, cluster_name varchar(200) NOT NULL, ping_data blob, PRIMARY KEY (own_addr, cluster_name)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin")
+/subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=insert_single_sql:add(value="INSERT INTO ${env.MYSQL_DATABASE:keycloak}.JGROUPSPING (own_addr, bind_addr, created, cluster_name, ping_data) values (?, '${env.JGROUPS_NODE_HOSTNAME}',CURRENT_TIMESTAMP, ?, ?)")
+/subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=select_all_pingdata_sql:add(value="SELECT ping_data FROM ${env.MYSQL_DATABASE:keycloak}.JGROUPSPING WHERE cluster_name = ?")
+/subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=delete_single_sql:add(value="DELETE FROM ${env.MYSQL_DATABASE:keycloak}.JGROUPSPING WHERE own_addr=? AND cluster_name=?")
+
+# remove the unnecessary socket bindings and set jgroups binding to public interface
+# public, because the host/container doesn't have multiple network interfaces
+/socket-binding-group=standard-sockets/socket-binding=jgroups-mping:remove()
+/socket-binding-group=standard-sockets/socket-binding=jgroups-udp:remove()
+/socket-binding-group=standard-sockets/socket-binding=jgroups-tcp:write-attribute(name=interface, value=public)
+
+run-batch
+stop-embedded-server

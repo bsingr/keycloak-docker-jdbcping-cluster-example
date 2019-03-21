@@ -1,0 +1,57 @@
+version: '3'
+
+services:
+  loadbalancer:
+    image: nginx:alpine
+    volumes:
+      - ./loadbalancer/nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - keycloak1
+      - keycloak2
+
+  mysql_jdbcping:
+    image: mysql:5.7.25
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=keycloak
+      - MYSQL_USER=keycloak
+      - MYSQL_PASSWORD=keycloak
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "127.0.0.1:3306"]
+      interval: 3s
+      timeout: 5s
+      retries: 100
+
+  keycloak1:
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+      - MYSQL_USER=keycloak
+      - MYSQL_PASSWORD=keycloak
+      - MYSQL_DATABASE=keycloak
+      - MYSQL_HOST=mysql_jdbcping
+      - PROXY_ADDRESS_FORWARDING=true
+      - JGROUPS_DISCOVERY_PROTOCOL=JDBC_PING
+      - JGROUPS_NODE_HOSTNAME=keycloak1
+    depends_on:
+      - mysql_jdbcping
+
+  keycloak2:
+    build:
+      dockerfile: Dockerfile
+      context: ./
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
+      - MYSQL_USER=keycloak
+      - MYSQL_PASSWORD=keycloak
+      - MYSQL_DATABASE=keycloak
+      - MYSQL_HOST=mysql_jdbcping
+      - PROXY_ADDRESS_FORWARDING=true
+      - JGROUPS_DISCOVERY_PROTOCOL=JDBC_PING
+      - JGROUPS_NODE_HOSTNAME=keycloak2
+    depends_on:
+      - mysql_jdbcping
