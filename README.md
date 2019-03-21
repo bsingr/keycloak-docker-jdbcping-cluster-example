@@ -53,7 +53,92 @@ keycloak1_1       | 15:12:34,164 INFO  [org.infinispan.CLUSTER] (remote-thread--
 ### Health Check Module
 
     $ curl http://localhost:8081/auth/realms/master/health/check
-    {"details":{"database":{"connection":"established","state":"UP"},"filesystem":{"freebytes":13042200576,"state":"UP"},"infinispan":{"numberOfNodes":2,"state":"UP","healthStatus":"HEALTHY","nodeNames":["keycloak1","keycloak2"],"cacheDetails":[{"cacheName":"realms","healthStatus":"HEALTHY"},{"cacheName":"authenticationSessions","healthStatus":"HEALTHY"},{"cacheName":"sessions","healthStatus":"HEALTHY"},{"cacheName":"authorizationRevisions","healthStatus":"HEALTHY"},{"cacheName":"work","healthStatus":"HEALTHY"},{"cacheName":"keys","healthStatus":"HEALTHY"},{"cacheName":"clientSessions","healthStatus":"HEALTHY"},{"cacheName":"users","healthStatus":"HEALTHY"},{"cacheName":"loginFailures","healthStatus":"HEALTHY"},{"cacheName":"offlineClientSessions","healthStatus":"HEALTHY"},{"cacheName":"authorization","healthStatus":"HEALTHY"},{"cacheName":"realmRevisions","healthStatus":"HEALTHY"},{"cacheName":"offlineSessions","healthStatus":"HEALTHY"},{"cacheName":"actionTokens","healthStatus":"HEALTHY"},{"cacheName":"userRevisions","healthStatus":"HEALTHY"}],"clusterName":"ejb"}},"name":"keycloak","state":"UP"}
+    {
+      "details": {
+        "infinispan": {
+          "numberOfNodes": 2,
+          "state": "UP",
+          "healthStatus": "HEALTHY",
+          "nodeNames": [
+            "keycloak1",
+            "keycloak2"
+          ],
+          "cacheDetails": [
+            {
+              "cacheName": "realms",
+              "healthStatus": "HEALTHY"
+            },
+            {
+              "cacheName": "authenticationSessions",
+              "healthStatus": "HEALTHY"
+            },
+            {
+              "cacheName": "sessions",
+              "healthStatus": "HEALTHY"
+            },
+            {
+              "cacheName": "authorizationRevisions",
+              "healthStatus": "HEALTHY"
+            },
+            {
+              "cacheName": "work",
+              "healthStatus": "HEALTHY"
+            },
+            {
+              "cacheName": "keys",
+              "healthStatus": "HEALTHY"
+            },
+            {
+              "cacheName": "clientSessions",
+              "healthStatus": "HEALTHY"
+            },
+            {
+              "cacheName": "users",
+              "healthStatus": "HEALTHY"
+            },
+            {
+              "cacheName": "loginFailures",
+              "healthStatus": "HEALTHY"
+            },
+            {
+              "cacheName": "offlineClientSessions",
+              "healthStatus": "HEALTHY"
+            },
+            {
+              "cacheName": "authorization",
+              "healthStatus": "HEALTHY"
+            },
+            {
+              "cacheName": "realmRevisions",
+              "healthStatus": "HEALTHY"
+            },
+            {
+              "cacheName": "offlineSessions",
+              "healthStatus": "HEALTHY"
+            },
+            {
+              "cacheName": "actionTokens",
+              "healthStatus": "HEALTHY"
+            },
+            {
+              "cacheName": "userRevisions",
+              "healthStatus": "HEALTHY"
+            }
+          ],
+          "clusterName": "ejb"
+        },
+        "database": {
+          "connection": "established",
+          "state": "UP"
+        },
+        "filesystem": {
+          "freebytes": 13042221056,
+          "state": "UP"
+        }
+      },
+      "name": "keycloak",
+      "state": "UP"
+    }
 
 
 ## Resources
