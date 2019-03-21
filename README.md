@@ -4,7 +4,13 @@ Note: this demonstrates issues creating session on keycloak cluster
 
 ## Start the cluster
 
-    docker-compose -f docker-compose.yml -f docker-compose.ports.yml up
+```bash
+# just start
+docker-compose -f docker-compose.yml -f docker-compose.ports.yml up
+
+# restart and rebuild
+docker-compose down && docker-compose -f docker-compose.yml -f docker-compose.ports.yml up --build
+```
 
 ## Create Sessions
 
