@@ -2,6 +2,11 @@
 
 Note: this demonstrates issues creating session on keycloak cluster
 
+Related discussions:
+
+- https://issues.jboss.org/browse/KEYCLOAK-9855
+- http://lists.jboss.org/pipermail/keycloak-user/2019-March/017511.html
+
 ## Start the cluster
 
 ```bash
