@@ -2,56 +2,88 @@ version: '3'
 
 services:
   loadbalancer:
-    image: nginx:alpine
+    image: traefik
+    container_name: keycloak-loadbalancer
+    ports:
+      - "80:80"
+      - "1337:8080"
     volumes:
-      - ./loadbalancer/nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./loadbalancer/traefik.toml:/etc/traefik/traefik.toml:ro"
+    command: -c /etc/traefik/traefik.toml
+    networks:
+      - keycloak
+    depends_on: 
       - keycloak1
       - keycloak2
 
   mysql_jdbcping:
     image: mysql:5.7.25
+    networks:
+      keycloak: { aliases: ["mysql.keycloak"] }
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=keycloak
       - MYSQL_USER=keycloak
       - MYSQL_PASSWORD=keycloak
     healthcheck:
-      test: ["CMD", "curl", "--fail", "127.0.0.1:3306"]
+      test: mysqladmin ping -h 127.0.0.1 -u root --password=$$MYSQL_ROOT_PASSWORD
       interval: 3s
       timeout: 5s
       retries: 100
+    ports:
+      - "3306:3306"
+    labels:
+      - "traefik.enable=false"
 
   keycloak1:
     build:
       dockerfile: Dockerfile
       context: ./
-    environment:
-      - KEYCLOAK_USER=admin
-      - KEYCLOAK_PASSWORD=admin
-      - MYSQL_USER=keycloak
-      - MYSQL_PASSWORD=keycloak
-      - MYSQL_DATABASE=keycloak
-      - MYSQL_HOST=mysql_jdbcping
-      - PROXY_ADDRESS_FORWARDING=true
-      - JGROUPS_DISCOVERY_PROTOCOL=JDBC_PING
-      - JGROUPS_NODE_HOSTNAME=keycloak1
+    environment: &keycloak_env
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: admin
+      MYSQL_USER: keycloak
+      MYSQL_PASSWORD: keycloak
+      MYSQL_DATABASE: keycloak
+      MYSQL_HOST: mysql.keycloak
+      PROXY_ADDRESS_FORWARDING: "true"
+      JGROUPS_DISCOVERY_PROTOCO: JDBC_PING
+      JGROUPS_NODE_HOSTNAME: node1.keycloak
+      CACHE_OWNERS_SESSIONS: 2
+      CACHE_OWNERS_AUTH_SESSIONS: 2
+      CACHE_OWNERS_OFFLINE_SESSIONS: 2
+      CACHE_OWNERS_CLIENT_SESSIONS: 2
+      CACHE_OWNERS_OFFLINE_CLIENT_SESSIONS: 2
+      CACHE_OWNERS_LOGIN_FAILURES: 2
     depends_on:
       - mysql_jdbcping
+    labels:
+      - "traefik.port=8080"
+      - "traefik.frontend.rule=PathPrefix:/auth"
+      - "traefik.frontend.headers.customRequestHeaders=X-Forwarded-Host:localhost"
+      - "traefik.backend=keycloak"
+      - "traefik.backend.healthcheck.path=/auth/realms/master/health/check"
+    networks:
+      keycloak: { aliases: ["node1.keycloak", "keycloak1"] }
 
   keycloak2:
     build:
       dockerfile: Dockerfile
       context: ./
     environment:
-      - KEYCLOAK_USER=admin
-      - KEYCLOAK_PASSWORD=admin
-      - MYSQL_USER=keycloak
-      - MYSQL_PASSWORD=keycloak
-      - MYSQL_DATABASE=keycloak
-      - MYSQL_HOST=mysql_jdbcping
-      - PROXY_ADDRESS_FORWARDING=true
-      - JGROUPS_DISCOVERY_PROTOCOL=JDBC_PING
-      - JGROUPS_NODE_HOSTNAME=keycloak2
+      <<: *keycloak_env
+      JGROUPS_NODE_HOSTNAME: node2.keycloak
     depends_on:
       - mysql_jdbcping
+    labels:
+      - "traefik.port=8080"
+      - "traefik.frontend.rule=PathPrefix:/auth"
+      - "traefik.frontend.headers.customRequestHeaders=X-Forwarded-Host:localhost"
+      - "traefik.backend=keycloak"
+      - "traefik.backend.healthcheck.path=/auth/realms/master/health/check"
+    networks:
+      keycloak: { aliases: ["node2.keycloak", "keycloak2"] }
+
+networks:
+  keycloak:

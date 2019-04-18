@@ -1,0 +1,14 @@
+debug = true
+
+[api]
+entryPoint = "traefik"
+dashboard = true
+
+[entryPoints]
+  [entryPoints.http]
+  address = ":80"
+
+[docker]
+endpoint = "unix:///var/run/docker.sock"
+watch = true
+network = "keycloak"
