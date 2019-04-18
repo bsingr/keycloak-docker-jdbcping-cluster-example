@@ -2,10 +2,12 @@ embed-server --server-config=standalone-ha.xml --std-out=echo
 batch
 
 /subsystem=logging/logger=org.jboss.as.clustering.infinispan:add
-/subsystem=logging/logger=org.jboss.as.clustering.infinispan:write-attribute(name="level", value="${env.INFINISPAN_LOGLEVEL:INFO}")
+/subsystem=logging/logger=org.jboss.as.clustering.infinispan:write-attribute(name="level", value="${env.INFINISPAN_LOGLEVEL:DEBUG}")
 
 /subsystem=logging/logger=org.keycloak.keys.infinispan:add
-/subsystem=logging/logger=org.keycloak.keys.infinispan:write-attribute(name="level", value="${env.INFINISPAN_LOGLEVEL:INFO}")
+/subsystem=logging/logger=org.keycloak.keys.infinispan:write-attribute(name="level", value="${env.INFINISPAN_LOGLEVEL:DEBUG}")
+
+/subsystem=logging/console-handler=CONSOLE:write-attribute(name="level", value=${env.KEYCLOAK_LOGLEVEL:INFO})
 
 run-batch
 stop-embedded-server

@@ -20,7 +20,7 @@ services:
   mysql_jdbcping:
     image: mysql:5.7.25
     networks:
-      keycloak: { aliases: ["mysql.keycloak"] }
+      keycloak: { aliases: ["mysql.keycloak", "mysql_jdbcping"] }
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=keycloak
@@ -37,25 +37,27 @@ services:
       - "traefik.enable=false"
 
   keycloak1:
+    container_name: keycloak1
     build:
       dockerfile: Dockerfile
       context: ./
     environment: &keycloak_env
+      DB_ADDR: mysql_jdbcping
+      DB_PORT: 3306
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_PASSWORD: keycloak
+      DB_VENDOR: mysql
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: admin
       MYSQL_USER: keycloak
       MYSQL_PASSWORD: keycloak
       MYSQL_DATABASE: keycloak
-      MYSQL_HOST: mysql.keycloak
+      MYSQL_HOST: mysql_jdbcping
       PROXY_ADDRESS_FORWARDING: "true"
-      JGROUPS_DISCOVERY_PROTOCO: JDBC_PING
-      JGROUPS_NODE_HOSTNAME: node1.keycloak
-      CACHE_OWNERS_SESSIONS: 2
-      CACHE_OWNERS_AUTH_SESSIONS: 2
-      CACHE_OWNERS_OFFLINE_SESSIONS: 2
-      CACHE_OWNERS_CLIENT_SESSIONS: 2
-      CACHE_OWNERS_OFFLINE_CLIENT_SESSIONS: 2
-      CACHE_OWNERS_LOGIN_FAILURES: 2
+      JGROUPS_DISCOVERY_PROTOCOL: JDBC_PING
+      JGROUPS_NODE_HOSTNAME: "keycloak1"
+      CACHE_OWNERS: 2
     depends_on:
       - mysql_jdbcping
     labels:
@@ -68,12 +70,13 @@ services:
       keycloak: { aliases: ["node1.keycloak", "keycloak1"] }
 
   keycloak2:
+    container_name: keycloak2
     build:
       dockerfile: Dockerfile
       context: ./
     environment:
       <<: *keycloak_env
-      JGROUPS_NODE_HOSTNAME: node2.keycloak
+      JGROUPS_NODE_HOSTNAME: "keycloak2"
     depends_on:
       - mysql_jdbcping
     labels:

@@ -1,12 +1,20 @@
 embed-server --server-config=standalone-ha.xml --std-out=echo
 batch
 
-/subsystem=infinispan/cache-container=keycloak/distributed-cache=sessions:write-attribute(name=owners, value=${env.CACHE_OWNERS_SESSIONS:2})
-/subsystem=infinispan/cache-container=keycloak/distributed-cache=authenticationSessions:write-attribute(name=owners, value=${env.CACHE_OWNERS_AUTH_SESSIONS:2})
-/subsystem=infinispan/cache-container=keycloak/distributed-cache=offlineSessions:write-attribute(name=owners, value=${env.CACHE_OWNERS_OFFLINE_SESSIONS:2})
-/subsystem=infinispan/cache-container=keycloak/distributed-cache=clientSessions:write-attribute(name=owners, value=${env.CACHE_OWNERS_CLIENT_SESSIONS:2})
-/subsystem=infinispan/cache-container=keycloak/distributed-cache=offlineClientSessions:write-attribute(name=owners, value=${env.CACHE_OWNERS_OFFLINE_CLIENT_SESSIONS:2})
-/subsystem=infinispan/cache-container=keycloak/distributed-cache=loginFailures:write-attribute(name=owners, value=${env.CACHE_OWNERS_LOGIN_FAILURES:2})
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=sessions:remove
+/subsystem=infinispan/cache-container=keycloak/replicated-cache=sessions:add()
+/subsystem=infinispan/cache-container=keycloak/replicated-cache=sessions:write-attribute(name="mode",value="SYNC")
 
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=authenticationSessions:remove
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=offlineSessions:remove
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=clientSessions:remove
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=offlineClientSessions:remove
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=loginFailures:remove
+
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=authenticationSessions:add(mode="SYNC",owners="2")
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=offlineSessions:add(mode="SYNC",owners="2")
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=clientSessions:add(mode="SYNC",owners="2")
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=offlineClientSessions:add(mode="SYNC",owners="2")
+/subsystem=infinispan/cache-container=keycloak/distributed-cache=loginFailures:add(mode="SYNC",owners="2")
 run-batch
 stop-embedded-server
