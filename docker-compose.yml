@@ -47,10 +47,10 @@ services:
       DB_VENDOR: mysql
       KEYCLOAK_USER: admin
       KEYCLOAK_PASSWORD: admin
-      MYSQL_USER: keycloak
-      MYSQL_PASSWORD: keycloak
-      MYSQL_DATABASE: keycloak
-      MYSQL_HOST: mysql_jdbcping
+      JDBCPING_DB_USER: keycloak
+      JDBCPING_DB_PASSWORD: keycloak
+      JDBCPING_DB_DATABASE: keycloak
+      JDBCPING_DB_HOST: mysql_jdbcping
       PROXY_ADDRESS_FORWARDING: "true"
       JGROUPS_DISCOVERY_PROTOCOL: JDBC_PING
       JGROUPS_NODE_HOSTNAME: "keycloak1"
