@@ -4,9 +4,6 @@ services:
   loadbalancer:
     image: traefik
     container_name: keycloak-loadbalancer
-    ports:
-      - "80:80"
-      - "1337:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "./loadbalancer/traefik.toml:/etc/traefik/traefik.toml:ro"

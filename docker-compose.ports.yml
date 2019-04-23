@@ -3,7 +3,8 @@ version: '3'
 services:
   loadbalancer:
     ports:
-      - "8000:80"
+      - "80:80"
+      - "1337:8080"
   mysql_jdbcping:
     ports:
       - "3306:3306"
