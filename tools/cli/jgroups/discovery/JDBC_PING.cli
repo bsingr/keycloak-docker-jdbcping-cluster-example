@@ -1,26 +1,49 @@
 embed-server --server-config=standalone-ha.xml --std-out=echo
 batch
 
+###############################################################################
+# basic network
+
 # Makes node identifier unique getting rid of a warning in the logs
 /subsystem=transactions:write-attribute(name=node-identifier, value=${jboss.node.name})
 
-/subsystem=jgroups/stack=tcp/transport=TCP/property=external_addr:add(value="${env.JGROUPS_NODE_HOSTNAME}")
+# Automatically upgrade the Database
+# See https://www.keycloak.org/docs/latest/upgrading/index.html#automatic-relational-database-migration
+/subsystem=keycloak-server/spi=connectionsJpa/provider=default/:map-put(name=properties,key=migrationStrategy,value=update)
 
+# network interface
+#/interface=private:write-attribute(name=nic, value=eth0)
+#/interface=private:undefine-attribute(name=inet-address)
 
-# Make use of the JDBC_PING
+###############################################################################
+# jgroups protocols
+# see http://www.jgroups.org/manual/html/protlist.html
+
+# Remove UDP transport
+/subsystem=jgroups/stack=udp:remove()
+
+# Remove MPING because its not supported by AWS
+/socket-binding-group=standard-sockets/socket-binding=jgroups-mping:remove()
+
+# Make TCP stack use JDBC_PING and others
+/subsystem=jgroups/channel=ee:write-attribute(name=stack, value=tcp)
 /subsystem=jgroups/stack=tcp:remove()
 /subsystem=jgroups/stack=tcp:add()
 /subsystem=jgroups/stack=tcp/transport=TCP:add(socket-binding="jgroups-tcp")
+/subsystem=jgroups/stack=tcp/transport=TCP/property=external_addr:add(value="${env.JGROUPS_NODE_HOSTNAME}")
+
+# Initial membership discovery with JDBC_PING
 /subsystem=jgroups/stack=tcp/protocol=JDBC_PING:add(add-index=0)
 /subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=connection_driver:add(value="com.mysql.jdbc.Driver")
 /subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=connection_url:add(value="jdbc:mysql://${env.MYSQL_HOST:localhost}:${env.MYSQL_PORT:3306}/${env.MYSQL_DATABASE:keycloak}?useSSL=false&amp;characterEncoding=UTF-8")
 /subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=connection_username:add(value="${env.MYSQL_USER:keycloak}")
 /subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=connection_password:add(value="${env.MYSQL_PASSWORD:keycloak}")
-/subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=initialize_sql:add(value="CREATE TABLE IF NOT EXISTS ${env.MYSQL_DATABASE:keycloak}.JGROUPSPING (own_addr varchar(200) NOT NULL, bind_addr varchar(200), created timestamp, cluster_name varchar(200) NOT NULL, ping_data blob, PRIMARY KEY (own_addr, cluster_name)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin")
-/subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=insert_single_sql:add(value="INSERT INTO ${env.MYSQL_DATABASE:keycloak}.JGROUPSPING (own_addr, bind_addr, created, cluster_name, ping_data) values (?, '${env.JGROUPS_NODE_HOSTNAME}',CURRENT_TIMESTAMP, ?, ?)")
+/subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=initialize_sql:add(value="CREATE TABLE IF NOT EXISTS ${env.MYSQL_DATABASE:keycloak}.JGROUPSPING (own_addr varchar(200) NOT NULL,created timestamp, cluster_name varchar(200) NOT NULL, ping_data blob, PRIMARY KEY (own_addr, cluster_name)) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin")
+/subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=insert_single_sql:add(value="INSERT INTO ${env.MYSQL_DATABASE:keycloak}.JGROUPSPING (own_addr, created, cluster_name, ping_data) values (?, CURRENT_TIMESTAMP, ?, ?)")
 /subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=select_all_pingdata_sql:add(value="SELECT ping_data FROM ${env.MYSQL_DATABASE:keycloak}.JGROUPSPING WHERE cluster_name = ?")
 /subsystem=jgroups/stack=tcp/protocol=JDBC_PING/property=delete_single_sql:add(value="DELETE FROM ${env.MYSQL_DATABASE:keycloak}.JGROUPSPING WHERE own_addr=? AND cluster_name=?")
 
+# Additional protocols
 /subsystem=jgroups/stack=tcp/protocol=MERGE3:add()
 /subsystem=jgroups/stack=tcp/protocol=FD_SOCK:add(socket-binding="jgroups-tcp-fd")
 /subsystem=jgroups/stack=tcp/protocol=FD:add()
@@ -32,20 +55,6 @@ batch
 /subsystem=jgroups/stack=tcp/protocol=pbcast.GMS/property=max_join_attempts:add(value=5)
 /subsystem=jgroups/stack=tcp/protocol=MFC:add()
 /subsystem=jgroups/stack=tcp/protocol=FRAG2:add()
-
-/subsystem=jgroups/channel=ee:write-attribute(name=stack, value=tcp)
-/subsystem=jgroups/stack=udp:remove()
-/socket-binding-group=standard-sockets/socket-binding=jgroups-mping:remove()
-/interface=private:write-attribute(name=nic, value=eth0)
-/interface=private:undefine-attribute(name=inet-address)
-
-# Inherit environment variable option to configure verbosity
-/subsystem=logging/console-handler=CONSOLE:write-attribute(name="level", value=${env.KEYCLOAK_LOGLEVEL:INFO})
-/subsystem=logging/logger=org.keycloak.social.user_profile_dump:add
-/subsystem=logging/logger=org.keycloak.social.user_profile_dump:write-attribute(name="level", value=${env.KEYCLOAK_LOGLEVEL:INFO})
-
-# Automatically upgrade the Database - https://www.keycloak.org/docs/latest/upgrading/index.html#automatic-relational-database-migration
-/subsystem=keycloak-server/spi=connectionsJpa/provider=default/:map-put(name=properties,key=migrationStrategy,value=update)
 
 run-batch
 stop-embedded-server
