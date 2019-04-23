@@ -6,11 +6,6 @@ batch
 
 /subsystem=jgroups/stack=tcp/transport=TCP/property=external_addr:add(value="${env.JGROUPS_NODE_HOSTNAME}")
 
-# Configure the Infinispan cache
-/subsystem=infinispan/cache-container=keycloak/distributed-cache=sessions:write-attribute(name=owners, value=${env.CACHE_OWNERS:2})
-/subsystem=infinispan/cache-container=keycloak/distributed-cache=authenticationSessions:write-attribute(name=owners, value=${env.CACHE_OWNERS:2})
-/subsystem=infinispan/cache-container=keycloak/distributed-cache=offlineSessions:write-attribute(name=owners, value=${env.CACHE_OWNERS:2})
-/subsystem=infinispan/cache-container=keycloak/distributed-cache=loginFailures:write-attribute(name=owners, value=${env.CACHE_OWNERS:2})
 
 # Make use of the JDBC_PING
 /subsystem=jgroups/stack=tcp:remove()
